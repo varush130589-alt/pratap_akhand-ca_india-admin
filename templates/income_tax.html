@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}
+Income Tax | CA INDIA
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="page-intro">
+
+    <div class="page-intro-box">
+
+        <span class="section-label">
+            TAXATION
+        </span>
+
+        <h1>
+            Income Tax Services
+        </h1>
+
+        <p>
+            Professional assistance with applicable income-tax
+            compliance and related taxation requirements.
+        </p>
+
+    </div>
+
+</section>
+
+
+<section class="content-section">
+
+    <div class="content-box">
+
+
+        <a href="{{ url_for('services') }}"
+           class="back-button">
+
+            ← Back to Services
+
+        </a>
+
+
+        <div class="detail-box">
+
+            <h2>
+                Service Overview
+            </h2>
+
+            <p>
+                Income-tax requirements can vary according to
+                the taxpayer, nature of income, transactions
+                and applicable provisions.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Compliance Assistance
+            </h3>
+
+            <p>
+                Assistance may include preparation and review
+                of relevant information and support relating to
+                applicable income-tax compliance requirements.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Tax Documentation
+            </h3>
+
+            <p>
+                Appropriate documentation and financial
+                information can help support accurate tax
+                compliance.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Important Note
+            </h3>
+
+            <p>
+                The scope of professional services depends on
+                the specific facts, circumstances and applicable
+                law at the time of engagement.
+            </p>
+
+        </div>
+
+
+        <div class="enquiry-box service-enquiry">
+
+            <span class="section-label">
+                INCOME TAX ENQUIRY
+            </span>
+
+            <h2>
+                Enquire about this service.
+            </h2>
+
+
+            <form action="{{ url_for('submit_enquiry') }}"
+                  method="POST"
+                  class="enquiry-form">
+
+
+                <input type="hidden"
+                       name="service"
+                       value="Income Tax">
+
+
+                <div class="form-group">
+
+                    <label>
+                        Full Name <span>*</span>
+                    </label>
+
+                    <input type="text"
+                           name="name"
+                           placeholder="Enter your full name"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Email Address <span>*</span>
+                    </label>
+
+                    <input type="email"
+                           name="email"
+                           placeholder="Enter your email address"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Phone Number
+                    </label>
+
+                    <input type="tel"
+                           name="phone"
+                           placeholder="Enter your phone number">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Requirement <span>*</span>
+                    </label>
+
+                    <textarea name="message"
+                              placeholder="Briefly describe your requirement"
+                              required></textarea>
+
+                </div>
+
+
+                <button type="submit"
+                        class="blue-button form-submit">
+
+                    Submit Enquiry
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

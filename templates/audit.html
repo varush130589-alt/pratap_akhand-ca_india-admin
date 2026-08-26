@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}
+Audit & Assurance | CA INDIA
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="page-intro">
+
+    <div class="page-intro-box">
+
+        <span class="section-label">
+            ASSURANCE
+        </span>
+
+        <h1>
+            Audit & Assurance
+        </h1>
+
+        <p>
+            Professional audit and assurance services according
+            to applicable requirements.
+        </p>
+
+    </div>
+
+</section>
+
+
+<section class="content-section">
+
+    <div class="content-box">
+
+        <a href="{{ url_for('services') }}"
+           class="back-button">
+            ← Back to Services
+        </a>
+
+
+        <div class="detail-box">
+
+            <h2>
+                Service Overview
+            </h2>
+
+            <p>
+                Audit and assurance engagements involve
+                examination of relevant financial information
+                and documentation according to the applicable
+                framework.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Audit Engagement
+            </h3>
+
+            <p>
+                The nature and scope of an audit depend on
+                applicable laws, standards and the agreed
+                engagement requirements.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Documentation
+            </h3>
+
+            <p>
+                Appropriate documentation and professional
+                judgment form important elements of audit
+                engagements.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Important Note
+            </h3>
+
+            <p>
+                Audit services are undertaken according to
+                applicable professional standards and the
+                specific requirements of the engagement.
+            </p>
+
+        </div>
+
+
+        <div class="enquiry-box service-enquiry">
+
+            <span class="section-label">
+                AUDIT ENQUIRY
+            </span>
+
+            <h2>
+                Enquire about audit services.
+            </h2>
+
+
+            <form action="{{ url_for('submit_enquiry') }}"
+                  method="POST"
+                  class="enquiry-form">
+
+                <input type="hidden"
+                       name="service"
+                       value="Audit & Assurance">
+
+
+                <div class="form-group">
+
+                    <label>
+                        Full Name <span>*</span>
+                    </label>
+
+                    <input type="text"
+                           name="name"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Email Address <span>*</span>
+                    </label>
+
+                    <input type="email"
+                           name="email"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Phone Number
+                    </label>
+
+                    <input type="tel"
+                           name="phone">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Requirement <span>*</span>
+                    </label>
+
+                    <textarea name="message"
+                              required></textarea>
+
+                </div>
+
+
+                <button type="submit"
+                        class="blue-button form-submit">
+
+                    Submit Enquiry
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

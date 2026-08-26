@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}
+Accounting & Bookkeeping | CA INDIA
+{% endblock %}
+
+
+{% block content %}
+
+
+<section class="page-intro">
+
+    <div class="page-intro-box">
+
+        <span class="section-label">
+            ACCOUNTING
+        </span>
+
+        <h1>
+            Accounting & Bookkeeping
+        </h1>
+
+        <p>
+            Organized accounting support for maintaining
+            useful financial records.
+        </p>
+
+    </div>
+
+</section>
+
+
+<section class="content-section">
+
+    <div class="content-box">
+
+        <a href="{{ url_for('services') }}"
+           class="back-button">
+            ← Back to Services
+        </a>
+
+
+        <div class="detail-box">
+
+            <h2>
+                Service Overview
+            </h2>
+
+            <p>
+                Accurate accounting records provide an
+                important foundation for understanding financial
+                activity and supporting compliance.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Bookkeeping
+            </h3>
+
+            <p>
+                Services may include recording and organizing
+                relevant financial transactions and maintaining
+                appropriate accounting records.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Financial Information
+            </h3>
+
+            <p>
+                Properly organized accounting information can
+                assist businesses in reviewing their financial
+                position and activity.
+            </p>
+
+        </div>
+
+
+        <div class="detail-box">
+
+            <h3>
+                Important Note
+            </h3>
+
+            <p>
+                The nature and scope of accounting services are
+                determined according to the requirements of the
+                individual engagement.
+            </p>
+
+        </div>
+
+
+        <div class="enquiry-box service-enquiry">
+
+            <span class="section-label">
+                ACCOUNTING ENQUIRY
+            </span>
+
+            <h2>
+                Enquire about accounting services.
+            </h2>
+
+
+            <form action="{{ url_for('submit_enquiry') }}"
+                  method="POST"
+                  class="enquiry-form">
+
+                <input type="hidden"
+                       name="service"
+                       value="Accounting & Bookkeeping">
+
+
+                <div class="form-group">
+
+                    <label>
+                        Full Name <span>*</span>
+                    </label>
+
+                    <input type="text"
+                           name="name"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Email Address <span>*</span>
+                    </label>
+
+                    <input type="email"
+                           name="email"
+                           required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Phone Number
+                    </label>
+
+                    <input type="tel"
+                           name="phone">
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Requirement <span>*</span>
+                    </label>
+
+                    <textarea name="message"
+                              required></textarea>
+
+                </div>
+
+
+                <button type="submit"
+                        class="blue-button form-submit">
+
+                    Submit Enquiry
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
