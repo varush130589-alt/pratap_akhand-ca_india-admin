@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Services | CA Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='admin.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="brand-logo">
+                PA
+            </div>
+
+            <div class="brand-text">
+
+                <strong>CA Admin</strong>
+                <span>Control Panel</span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('news') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">▤</span>
+                News
+            </a>
+
+            <a
+                href="{{ url_for('services') }}"
+                class="nav-item active"
+            >
+                <span class="nav-icon">◆</span>
+                Services
+            </a>
+
+            <a
+                href="{{ url_for('enquiries') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                Enquiries
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="logged-user">
+
+                <div class="user-avatar">
+                    {{ session.username[0]|upper }}
+                </div>
+
+                <div>
+
+                    <strong>
+                        {{ session.username }}
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="logout-button"
+            >
+                ↪ Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <button
+                class="mobile-menu"
+                id="menuButton"
+            >
+                ☰
+            </button>
+
+            <div>
+
+                <h1>Services</h1>
+
+                <p>
+                    Manage the services displayed on the website.
+                </p>
+
+            </div>
+
+        </header>
+
+
+        <section class="page-content">
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endwith %}
+
+
+            <!-- ADD SERVICE -->
+
+            <div class="form-card">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+                            Add Service
+                        </h2>
+
+                        <p>
+                            Create a new professional service.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for('add_service_route') }}"
+                >
+
+                    <div class="form-grid">
+
+                        <div class="input-group">
+
+                            <label>
+                                Service Name
+                            </label>
+
+                            <input
+                                type="text"
+                                name="title"
+                                placeholder="e.g. Income Tax Filing"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="input-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select name="status">
+
+                                <option value="Active">
+                                    Active
+                                </option>
+
+                                <option value="Inactive">
+                                    Inactive
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Description
+                        </label>
+
+                        <textarea
+                            name="description"
+                            rows="5"
+                            placeholder="Describe the service..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        + Add Service
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- SERVICES -->
+
+            <div class="table-card">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+                            Existing Services
+                        </h2>
+
+                        <p>
+                            {{ services|length }}
+                            service(s).
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>ID</th>
+                                <th>Service</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for service in services %}
+
+                            <tr>
+
+                                <td>
+                                    #{{ service.id }}
+                                </td>
+
+                                <td>
+
+                                    <strong>
+                                        {{ service.title }}
+                                    </strong>
+
+                                </td>
+
+                                <td>
+
+                                    <div class="table-description">
+                                        {{ service.description }}
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    <span
+                                        class="status-pill
+                                        {% if service.status == 'Active' %}
+                                            status-active
+                                        {% else %}
+                                            status-inactive
+                                        {% endif %}"
+                                    >
+
+                                        {{ service.status }}
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+
+                                    <div class="action-buttons">
+
+                                        <button
+                                            type="button"
+                                            class="btn-small btn-edit"
+                                            onclick="openServiceEditor(
+                                                {{ service.id }},
+                                                {{ service.title|tojson }},
+                                                {{ service.description|tojson }},
+                                                {{ service.status|tojson }}
+                                            )"
+                                        >
+                                            Edit
+                                        </button>
+
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for(
+                                                'delete_service_route',
+                                                service_id=service.id
+                                            ) }}"
+                                            onsubmit="return confirmDelete(
+                                                'Delete this service?'
+                                            )"
+                                        >
+
+                                            <button
+                                                type="submit"
+                                                class="btn-small btn-delete"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="empty-state"
+                                >
+                                    No services have been added yet.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- EDIT SERVICE MODAL -->
+
+<div
+    class="modal-overlay"
+    id="serviceModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>
+                    Edit Service
+                </h2>
+
+                <p>
+                    Update service information.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeServiceEditor()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            id="serviceEditForm"
+        >
+
+            <div class="input-group">
+
+                <label>
+                    Service Name
+                </label>
+
+                <input
+                    type="text"
+                    name="title"
+                    id="editServiceTitle"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Status
+                </label>
+
+                <select
+                    name="status"
+                    id="editServiceStatus"
+                >
+
+                    <option value="Active">
+                        Active
+                    </option>
+
+                    <option value="Inactive">
+                        Inactive
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Description
+                </label>
+
+                <textarea
+                    name="description"
+                    id="editServiceDescription"
+                    rows="7"
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="closeServiceEditor()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='admin.js') }}"
+></script>
+
+</body>
+
+</html>

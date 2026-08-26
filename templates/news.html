@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>News | CA Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='admin.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="brand-logo">
+                PA
+            </div>
+
+            <div class="brand-text">
+
+                <strong>CA Admin</strong>
+                <span>Control Panel</span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a
+                href="{{ url_for('news') }}"
+                class="nav-item active"
+            >
+                <span class="nav-icon">▤</span>
+                News
+            </a>
+
+            <a
+                href="{{ url_for('services') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">◆</span>
+                Services
+            </a>
+
+            <a
+                href="{{ url_for('enquiries') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                Enquiries
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="logged-user">
+
+                <div class="user-avatar">
+                    {{ session.username[0]|upper }}
+                </div>
+
+                <div>
+
+                    <strong>
+                        {{ session.username }}
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="logout-button"
+            >
+                ↪ Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <button
+                class="mobile-menu"
+                id="menuButton"
+            >
+                ☰
+            </button>
+
+            <div>
+
+                <h1>News Management</h1>
+
+                <p>
+                    Manage announcements and website updates.
+                </p>
+
+            </div>
+
+        </header>
+
+
+        <section class="page-content">
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endwith %}
+
+
+            <!-- ADD NEWS -->
+
+            <div class="form-card">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+                            Add News
+                        </h2>
+
+                        <p>
+                            Publish a new website update.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <form
+                    method="POST"
+                    action="{{ url_for('add_news_route') }}"
+                >
+
+                    <div class="form-grid">
+
+                        <div class="input-group">
+
+                            <label>
+                                Title
+                            </label>
+
+                            <input
+                                type="text"
+                                name="title"
+                                placeholder="Enter news title"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="input-group">
+
+                            <label>
+                                Status
+                            </label>
+
+                            <select name="status">
+
+                                <option value="Published">
+                                    Published
+                                </option>
+
+                                <option value="Draft">
+                                    Draft
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>
+                            Content
+                        </label>
+
+                        <textarea
+                            name="content"
+                            rows="6"
+                            placeholder="Write the news content..."
+                            required
+                        ></textarea>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        + Publish News
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- NEWS LIST -->
+
+            <div class="table-card">
+
+                <div class="section-heading">
+
+                    <div>
+
+                        <h2>
+                            Existing News
+                        </h2>
+
+                        <p>
+                            {{ news|length }}
+                            article(s).
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                        {% for item in news %}
+
+                            <tr>
+
+                                <td>
+                                    #{{ item.id }}
+                                </td>
+
+                                <td>
+
+                                    <strong>
+                                        {{ item.title }}
+                                    </strong>
+
+                                    <div class="table-description">
+                                        {{ item.content[:100] }}
+                                        {% if item.content|length > 100 %}
+                                            ...
+                                        {% endif %}
+                                    </div>
+
+                                </td>
+
+                                <td>
+
+                                    <span
+                                        class="status-pill
+                                        {% if item.status == 'Published' %}
+                                            status-active
+                                        {% else %}
+                                            status-draft
+                                        {% endif %}"
+                                    >
+
+                                        {{ item.status }}
+
+                                    </span>
+
+                                </td>
+
+                                <td>
+                                    {{ item.created_at }}
+                                </td>
+
+                                <td>
+
+                                    <div class="action-buttons">
+
+                                        <button
+                                            type="button"
+                                            class="btn-small btn-edit"
+                                            onclick="openNewsEditor(
+                                                {{ item.id }},
+                                                {{ item.title|tojson }},
+                                                {{ item.content|tojson }},
+                                                {{ item.status|tojson }}
+                                            )"
+                                        >
+                                            Edit
+                                        </button>
+
+
+                                        <form
+                                            method="POST"
+                                            action="{{ url_for(
+                                                'delete_news_route',
+                                                news_id=item.id
+                                            ) }}"
+                                            onsubmit="return confirmDelete(
+                                                'Delete this news article?'
+                                            )"
+                                        >
+
+                                            <button
+                                                type="submit"
+                                                class="btn-small btn-delete"
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </form>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        {% else %}
+
+                            <tr>
+
+                                <td
+                                    colspan="5"
+                                    class="empty-state"
+                                >
+                                    No news articles yet.
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- EDIT NEWS MODAL -->
+
+<div
+    class="modal-overlay"
+    id="newsModal"
+>
+
+    <div class="modal">
+
+        <div class="modal-header">
+
+            <div>
+
+                <h2>
+                    Edit News
+                </h2>
+
+                <p>
+                    Update this article.
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                class="modal-close"
+                onclick="closeNewsEditor()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            id="newsEditForm"
+        >
+
+            <div class="input-group">
+
+                <label>
+                    Title
+                </label>
+
+                <input
+                    type="text"
+                    name="title"
+                    id="editNewsTitle"
+                    required
+                >
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Status
+                </label>
+
+                <select
+                    name="status"
+                    id="editNewsStatus"
+                >
+
+                    <option value="Published">
+                        Published
+                    </option>
+
+                    <option value="Draft">
+                        Draft
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="input-group">
+
+                <label>
+                    Content
+                </label>
+
+                <textarea
+                    name="content"
+                    id="editNewsContent"
+                    rows="8"
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    onclick="closeNewsEditor()"
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='admin.js') }}"
+></script>
+
+</body>
+
+</html>

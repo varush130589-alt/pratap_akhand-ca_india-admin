@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Dashboard | CA Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='admin.css') }}"
+    >
+
+</head>
+
+<body>
+
+<div class="admin-layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="brand-logo">
+                PA
+            </div>
+
+            <div class="brand-text">
+
+                <strong>CA Admin</strong>
+
+                <span>Control Panel</span>
+
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="nav-item active"
+            >
+                <span class="nav-icon">⌂</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a
+                href="{{ url_for('news') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">▤</span>
+                <span>News</span>
+            </a>
+
+            <a
+                href="{{ url_for('services') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">◆</span>
+                <span>Services</span>
+            </a>
+
+            <a
+                href="{{ url_for('enquiries') }}"
+                class="nav-item"
+            >
+                <span class="nav-icon">✉</span>
+                <span>Enquiries</span>
+
+                {% if statistics.unread_enquiries > 0 %}
+
+                    <span class="nav-badge">
+                        {{ statistics.unread_enquiries }}
+                    </span>
+
+                {% endif %}
+
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="logged-user">
+
+                <div class="user-avatar">
+                    {{ session.username[0]|upper }}
+                </div>
+
+                <div>
+
+                    <strong>
+                        {{ session.username }}
+                    </strong>
+
+                    <span>
+                        Administrator
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="{{ url_for('logout') }}"
+                class="logout-button"
+            >
+                ↪ Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <button
+                class="mobile-menu"
+                id="menuButton"
+            >
+                ☰
+            </button>
+
+            <div>
+
+                <h1>Dashboard</h1>
+
+                <p>
+                    Welcome back,
+                    <strong>{{ session.username }}</strong>.
+                </p>
+
+            </div>
+
+            <div class="topbar-badge">
+                ADMIN
+            </div>
+
+        </header>
+
+
+        <section class="page-content">
+
+            {% with messages =
+                get_flashed_messages(with_categories=true)
+            %}
+
+                {% for category, message in messages %}
+
+                    <div class="alert {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endwith %}
+
+
+            <!-- HERO -->
+
+            <div class="dashboard-hero">
+
+                <div>
+
+                    <span class="hero-label">
+                        WEBSITE CONTROL CENTER
+                    </span>
+
+                    <h2>
+                        Pratap Akhand & Associates
+                    </h2>
+
+                    <p>
+                        Manage your website content,
+                        services, news and enquiries
+                        from one place.
+                    </p>
+
+                </div>
+
+                <div class="hero-decoration">
+
+                    <div class="hero-circle">
+                        PA
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATISTICS -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <div class="stat-icon blue">
+                        ▤
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Total News
+                        </span>
+
+                        <strong>
+                            {{ statistics.news }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon purple">
+                        ◆
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Total Services
+                        </span>
+
+                        <strong>
+                            {{ statistics.services }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon green">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Active Services
+                        </span>
+
+                        <strong>
+                            {{ statistics.active_services }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-icon orange">
+                        ✉
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Enquiries
+                        </span>
+
+                        <strong>
+                            {{ statistics.enquiries }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACTIONS -->
+
+            <div class="section-heading">
+
+                <div>
+
+                    <h2>
+                        Quick Actions
+                    </h2>
+
+                    <p>
+                        Manage important website content.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="quick-grid">
+
+                <a
+                    href="{{ url_for('news') }}"
+                    class="quick-card"
+                >
+
+                    <div class="quick-card-icon">
+                        ▤
+                    </div>
+
+                    <h3>
+                        Manage News
+                    </h3>
+
+                    <p>
+                        Publish announcements,
+                        articles and updates.
+                    </p>
+
+                    <span>
+                        Open →
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('services') }}"
+                    class="quick-card"
+                >
+
+                    <div class="quick-card-icon">
+                        ◆
+                    </div>
+
+                    <h3>
+                        Manage Services
+                    </h3>
+
+                    <p>
+                        Control the professional
+                        services displayed online.
+                    </p>
+
+                    <span>
+                        Open →
+                    </span>
+
+                </a>
+
+
+                <a
+                    href="{{ url_for('enquiries') }}"
+                    class="quick-card"
+                >
+
+                    <div class="quick-card-icon">
+                        ✉
+                    </div>
+
+                    <h3>
+                        View Enquiries
+                    </h3>
+
+                    <p>
+                        Review enquiries received
+                        through the website.
+                    </p>
+
+                    <span>
+                        Open →
+                    </span>
+
+                </a>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="status-panel">
+
+                <div>
+
+                    <div class="status-dot"></div>
+
+                    <div>
+
+                        <strong>
+                            Admin system operational
+                        </strong>
+
+                        <span>
+                            Database and dashboard
+                            are running normally.
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="status-number">
+
+                    {{ statistics.unread_enquiries }}
+
+                    <small>
+                        unread enquiries
+                    </small>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script
+    src="{{ url_for('static', filename='admin.js') }}"
+></script>
+
+</body>
+
+</html>
