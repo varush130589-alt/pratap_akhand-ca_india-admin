@@ -37,8 +37,8 @@ def health_check():
 )
 def create_enquiry():
 
-    # Import here to avoid circular imports
     from app import get_db
+
     from models.enquiries import add_enquiry
 
 
@@ -60,46 +60,31 @@ def create_enquiry():
 
 
     # -----------------------------------------------------
-    # GET DATA
+    # GET FORM DATA
     # -----------------------------------------------------
 
     name = str(
-        data.get(
-            "name",
-            ""
-        )
+        data.get("name", "")
     ).strip()
 
 
     email = str(
-        data.get(
-            "email",
-            ""
-        )
+        data.get("email", "")
     ).strip()
 
 
     phone = str(
-        data.get(
-            "phone",
-            ""
-        )
+        data.get("phone", "")
     ).strip()
 
 
     service = str(
-        data.get(
-            "service",
-            ""
-        )
+        data.get("service", "")
     ).strip()
 
 
     message = str(
-        data.get(
-            "message",
-            ""
-        )
+        data.get("message", "")
     ).strip()
 
 
@@ -140,7 +125,7 @@ def create_enquiry():
 
 
     # -----------------------------------------------------
-    # SAVE TO DATABASE
+    # SAVE
     # -----------------------------------------------------
 
     try:
@@ -154,23 +139,22 @@ def create_enquiry():
             message
         )
 
-
     except Exception as error:
 
         print(
-            "API ERROR:",
+            "ENQUIRY API ERROR:",
             error
         )
 
         return jsonify({
             "success": False,
             "message":
-                "Failed to save enquiry."
+                "Unable to save enquiry."
         }), 500
 
 
     # -----------------------------------------------------
-    # SUCCESS RESPONSE
+    # SUCCESS
     # -----------------------------------------------------
 
     return jsonify({
