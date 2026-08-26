@@ -4,303 +4,842 @@ from flask import (
     request,
     redirect,
     url_for,
+    session,
     flash
 )
 
-import requests
+from werkzeug.security import (
+    generate_password_hash,
+    check_password_hash
+)
+
+from api import api
+
+import os
+import sqlite3
 
 
-# ============================================================
+# =========================================================
 # APPLICATION
-# ============================================================
+# =========================================================
 
 app = Flask(__name__)
 
-# Used for Flask flash messages
-app.secret_key = "ca-india-website-secret-key"
 
+# =========================================================
+# SECRET KEY
+# =========================================================
 
-# ============================================================
-# ADMIN API
-# ============================================================
-
-ADMIN_API_URL = (
-    "https://pratap-akhand-ca-india-admin.onrender.com"
-    "/api/enquiries"
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "change-this-secret-key"
 )
 
 
-# ============================================================
-# HOME
-# ============================================================
+# =========================================================
+# REGISTER API
+# =========================================================
 
-@app.route("/")
-def home():
+app.register_blueprint(api)
 
-    return render_template(
-        "index.html"
+
+# =========================================================
+# DATABASE PATH
+# =========================================================
+
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
+
+DATABASE_DIR = os.path.join(
+    BASE_DIR,
+    "database"
+)
+
+DATABASE = os.path.join(
+    DATABASE_DIR,
+    "admin.db"
+)
+
+
+# =========================================================
+# DATABASE CONNECTION
+# =========================================================
+
+def get_db():
+
+    os.makedirs(
+        DATABASE_DIR,
+        exist_ok=True
+    )
+
+    db = sqlite3.connect(
+        DATABASE
+    )
+
+    db.row_factory = sqlite3.Row
+
+    return db
+
+
+# =========================================================
+# ADMIN TABLE
+# =========================================================
+
+def init_admin_table():
+
+    db = get_db()
+
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS admins (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            username TEXT UNIQUE NOT NULL,
+
+            password TEXT NOT NULL
+
+        )
+    """)
+
+    db.commit()
+
+
+    # -----------------------------------------------------
+    # CREATE DEFAULT ADMIN IF NONE EXISTS
+    # -----------------------------------------------------
+
+    admin = db.execute(
+        """
+        SELECT id
+        FROM admins
+        WHERE username = ?
+        """,
+        ("admin",)
+    ).fetchone()
+
+
+    if not admin:
+
+        password = os.environ.get(
+            "ADMIN_PASSWORD",
+            "11111111"
+        )
+
+        password_hash = generate_password_hash(
+            password
+        )
+
+        db.execute(
+            """
+            INSERT INTO admins
+            (
+                username,
+                password
+            )
+            VALUES (?, ?)
+            """,
+            (
+                "admin",
+                password_hash
+            )
+        )
+
+        db.commit()
+
+
+    db.close()
+
+
+# =========================================================
+# INITIALIZE MODELS
+# =========================================================
+
+from models.news import (
+    init_news_table,
+    get_all_news,
+    add_news,
+    update_news,
+    delete_news,
+    count_news
+)
+
+from models.service import (
+    init_service_table,
+    get_all_services,
+    add_service,
+    update_service,
+    delete_service,
+    count_services,
+    count_active_services
+)
+
+from models.enquiries import (
+    init_enquiry_table,
+    get_all_enquiries,
+    mark_enquiry_read,
+    delete_enquiry,
+    count_enquiries,
+    count_unread_enquiries
+)
+
+
+# =========================================================
+# INITIALIZE DATABASE
+# =========================================================
+
+def initialize_database():
+
+    os.makedirs(
+        DATABASE_DIR,
+        exist_ok=True
+    )
+
+    init_admin_table()
+
+    init_news_table(
+        get_db
+    )
+
+    init_service_table(
+        get_db
+    )
+
+    init_enquiry_table(
+        get_db
     )
 
 
-# ============================================================
-# ABOUT
-# ============================================================
-
-@app.route("/about")
-def about():
-
-    return render_template(
-        "about.html"
-    )
+initialize_database()
 
 
-# ============================================================
-# SERVICES
-# ============================================================
+# =========================================================
+# LOGIN CHECK
+# =========================================================
 
-@app.route("/services")
-def services():
+def login_required():
 
-    return render_template(
-        "services.html"
-    )
+    return "admin_id" in session
 
 
-# ============================================================
-# INDIVIDUAL SERVICE PAGES
-# ============================================================
-
-@app.route("/services/income-tax")
-def income_tax():
-
-    return render_template(
-        "income_tax.html"
-    )
-
-
-@app.route("/services/gst")
-def gst():
-
-    return render_template(
-        "gst.html"
-    )
-
-
-@app.route("/services/accounting")
-def accounting():
-
-    return render_template(
-        "accounting.html"
-    )
-
-
-@app.route("/services/audit")
-def audit():
-
-    return render_template(
-        "audit.html"
-    )
-
-
-@app.route("/services/financial-advisory")
-def financial_advisory():
-
-    return render_template(
-        "financial_advisory.html"
-    )
-
-
-# ============================================================
-# CONTACT
-# ============================================================
-
-@app.route("/contact")
-def contact():
-
-    return render_template(
-        "contact.html"
-    )
-
-
-# ============================================================
-# ENQUIRY FORM
-# ============================================================
+# =========================================================
+# LOGIN
+# =========================================================
 
 @app.route(
-    "/submit-enquiry",
-    methods=["POST"]
+    "/",
+    methods=["GET", "POST"]
 )
-def submit_enquiry():
+def login():
 
-    # --------------------------------------------------------
-    # GET FORM DATA
-    # --------------------------------------------------------
+    if login_required():
 
-    name = request.form.get(
-        "name",
-        ""
-    ).strip()
+        return redirect(
+            url_for("dashboard")
+        )
 
 
-    email = request.form.get(
-        "email",
-        ""
-    ).strip()
+    if request.method == "POST":
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
 
 
-    phone = request.form.get(
-        "phone",
-        ""
-    ).strip()
+        db = get_db()
+
+        admin = db.execute(
+            """
+            SELECT *
+            FROM admins
+            WHERE username = ?
+            """,
+            (username,)
+        ).fetchone()
+
+        db.close()
 
 
-    service = request.form.get(
-        "service",
-        ""
-    ).strip()
+        if admin and check_password_hash(
+            admin["password"],
+            password
+        ):
 
+            session.clear()
 
-    message = request.form.get(
-        "message",
-        ""
-    ).strip()
+            session["admin_id"] = admin["id"]
 
+            session["username"] = admin["username"]
 
-    # --------------------------------------------------------
-    # VALIDATE FORM
-    # --------------------------------------------------------
+            return redirect(
+                url_for("dashboard")
+            )
 
-    if (
-        not name
-        or not email
-        or not service
-        or not message
-    ):
 
         flash(
-            "Please complete all required fields before submitting.",
+            "Invalid username or password.",
             "error"
         )
 
+
+    return render_template(
+        "login.html"
+    )
+
+
+# =========================================================
+# LOGOUT
+# =========================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+
+
+# =========================================================
+# DASHBOARD
+# =========================================================
+
+@app.route("/dashboard")
+def dashboard():
+
+    if not login_required():
+
         return redirect(
-            request.referrer
-            or url_for("home")
+            url_for("login")
         )
 
 
-    # --------------------------------------------------------
-    # PREPARE DATA FOR ADMIN API
-    # --------------------------------------------------------
+    statistics = {
 
-    enquiry_data = {
+        "news":
+            count_news(get_db),
 
-        "name": name,
+        "services":
+            count_services(get_db),
 
-        "email": email,
+        "active_services":
+            count_active_services(get_db),
 
-        "phone": phone,
+        "enquiries":
+            count_enquiries(get_db),
 
-        "service": service,
-
-        "message": message
+        "unread_enquiries":
+            count_unread_enquiries(get_db)
 
     }
 
 
-    # --------------------------------------------------------
-    # SEND ENQUIRY TO ADMIN DASHBOARD
-    # --------------------------------------------------------
+    return render_template(
+        "dashboard.html",
+        statistics=statistics
+    )
 
-    try:
 
-        response = requests.post(
+# =========================================================
+# NEWS
+# =========================================================
 
-            ADMIN_API_URL,
+@app.route("/news")
+def news():
 
-            json=enquiry_data,
+    if not login_required():
 
-            timeout=15
-
+        return redirect(
+            url_for("login")
         )
 
 
-    except requests.exceptions.RequestException as error:
+    news_items = get_all_news(
+        get_db
+    )
 
-        print(
-            "ADMIN API CONNECTION ERROR:",
-            error
+
+    return render_template(
+        "news.html",
+        news=news_items
+    )
+
+
+# =========================================================
+# ADD NEWS
+# =========================================================
+
+@app.route(
+    "/news/add",
+    methods=["POST"]
+)
+def add_news_route():
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
         )
+
+
+    title = request.form.get(
+        "title",
+        ""
+    ).strip()
+
+
+    content = request.form.get(
+        "content",
+        ""
+    ).strip()
+
+
+    status = request.form.get(
+        "status",
+        "Published"
+    ).strip()
+
+
+    if not title or not content:
 
         flash(
-            "We could not submit your enquiry right now. "
-            "Please try again later.",
+            "Title and content are required.",
             "error"
         )
 
         return redirect(
-            request.referrer
-            or url_for("contact")
+            url_for("news")
         )
 
 
-    # --------------------------------------------------------
-    # CHECK ADMIN API RESPONSE
-    # --------------------------------------------------------
-
-    if response.status_code == 201:
-
-        try:
-
-            result = response.json()
-
-        except ValueError:
-
-            result = {}
-
-
-        if result.get("success"):
-
-            flash(
-                "Thank you. Your enquiry has been received.",
-                "success"
-            )
-
-            return redirect(
-                request.referrer
-                or url_for("contact")
-            )
-
-
-    # --------------------------------------------------------
-    # API ERROR
-    # --------------------------------------------------------
-
-    print(
-        "ADMIN API ERROR:",
-        response.status_code,
-        response.text
+    add_news(
+        get_db,
+        title,
+        content,
+        status
     )
+
 
     flash(
-        "We could not submit your enquiry right now. "
-        "Please try again later.",
-        "error"
+        "News article added successfully.",
+        "success"
     )
+
 
     return redirect(
-        request.referrer
-        or url_for("contact")
+        url_for("news")
     )
 
 
-# ============================================================
+# =========================================================
+# EDIT NEWS
+# =========================================================
+
+@app.route(
+    "/news/edit/<int:news_id>",
+    methods=["POST"]
+)
+def edit_news_route(news_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    title = request.form.get(
+        "title",
+        ""
+    ).strip()
+
+
+    content = request.form.get(
+        "content",
+        ""
+    ).strip()
+
+
+    status = request.form.get(
+        "status",
+        "Published"
+    ).strip()
+
+
+    if not title or not content:
+
+        flash(
+            "Title and content are required.",
+            "error"
+        )
+
+        return redirect(
+            url_for("news")
+        )
+
+
+    update_news(
+        get_db,
+        news_id,
+        title,
+        content,
+        status
+    )
+
+
+    flash(
+        "News article updated.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("news")
+    )
+
+
+# =========================================================
+# DELETE NEWS
+# =========================================================
+
+@app.route(
+    "/news/delete/<int:news_id>",
+    methods=["POST"]
+)
+def delete_news_route(news_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    delete_news(
+        get_db,
+        news_id
+    )
+
+
+    flash(
+        "News article deleted.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("news")
+    )
+
+
+# =========================================================
+# SERVICES
+# =========================================================
+
+@app.route("/services")
+def services():
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    services_list = get_all_services(
+        get_db
+    )
+
+
+    return render_template(
+        "services.html",
+        services=services_list
+    )
+
+
+# =========================================================
+# ADD SERVICE
+# =========================================================
+
+@app.route(
+    "/services/add",
+    methods=["POST"]
+)
+def add_service_route():
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    title = request.form.get(
+        "title",
+        ""
+    ).strip()
+
+
+    description = request.form.get(
+        "description",
+        ""
+    ).strip()
+
+
+    status = request.form.get(
+        "status",
+        "Active"
+    ).strip()
+
+
+    if not title or not description:
+
+        flash(
+            "Service name and description are required.",
+            "error"
+        )
+
+        return redirect(
+            url_for("services")
+        )
+
+
+    add_service(
+        get_db,
+        title,
+        description,
+        status
+    )
+
+
+    flash(
+        "Service added successfully.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("services")
+    )
+
+
+# =========================================================
+# EDIT SERVICE
+# =========================================================
+
+@app.route(
+    "/services/edit/<int:service_id>",
+    methods=["POST"]
+)
+def edit_service_route(service_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    title = request.form.get(
+        "title",
+        ""
+    ).strip()
+
+
+    description = request.form.get(
+        "description",
+        ""
+    ).strip()
+
+
+    status = request.form.get(
+        "status",
+        "Active"
+    ).strip()
+
+
+    if not title or not description:
+
+        flash(
+            "Service name and description are required.",
+            "error"
+        )
+
+        return redirect(
+            url_for("services")
+        )
+
+
+    update_service(
+        get_db,
+        service_id,
+        title,
+        description,
+        status
+    )
+
+
+    flash(
+        "Service updated successfully.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("services")
+    )
+
+
+# =========================================================
+# DELETE SERVICE
+# =========================================================
+
+@app.route(
+    "/services/delete/<int:service_id>",
+    methods=["POST"]
+)
+def delete_service_route(service_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    delete_service(
+        get_db,
+        service_id
+    )
+
+
+    flash(
+        "Service deleted.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("services")
+    )
+
+
+# =========================================================
+# ENQUIRIES
+# =========================================================
+
+@app.route("/enquiries")
+def enquiries():
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    enquiries_list = get_all_enquiries(
+        get_db
+    )
+
+
+    return render_template(
+        "enquiries.html",
+        enquiries=enquiries_list
+    )
+
+
+# =========================================================
+# MARK ENQUIRY AS READ
+# =========================================================
+
+@app.route(
+    "/enquiries/read/<int:enquiry_id>",
+    methods=["POST"]
+)
+def read_enquiry(enquiry_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    mark_enquiry_read(
+        get_db,
+        enquiry_id
+    )
+
+
+    flash(
+        "Enquiry marked as read.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("enquiries")
+    )
+
+
+# =========================================================
+# DELETE ENQUIRY
+# =========================================================
+
+@app.route(
+    "/enquiries/delete/<int:enquiry_id>",
+    methods=["POST"]
+)
+def delete_enquiry_route(enquiry_id):
+
+    if not login_required():
+
+        return redirect(
+            url_for("login")
+        )
+
+
+    delete_enquiry(
+        get_db,
+        enquiry_id
+    )
+
+
+    flash(
+        "Enquiry deleted.",
+        "success"
+    )
+
+
+    return redirect(
+        url_for("enquiries")
+    )
+
+
+# =========================================================
 # RUN APPLICATION
-# ============================================================
+# =========================================================
 
 if __name__ == "__main__":
 
+    port = int(
+        os.environ.get(
+            "PORT",
+            5001
+        )
+    )
+
+
     app.run(
         host="0.0.0.0",
-        port=5000,
+        port=port,
         debug=True
     )
