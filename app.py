@@ -1,186 +1,306 @@
-from flask import Blueprint, request, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash
+)
+
+import requests
 
 
-# =========================================================
-# API BLUEPRINT
-# =========================================================
+# ============================================================
+# APPLICATION
+# ============================================================
 
-api = Blueprint(
-    "api",
-    __name__
+app = Flask(__name__)
+
+# Used for Flask flash messages
+app.secret_key = "ca-india-website-secret-key"
+
+
+# ============================================================
+# ADMIN API
+# ============================================================
+
+ADMIN_API_URL = (
+    "https://pratap-akhand-ca-india-admin.onrender.com"
+    "/api/enquiries"
 )
 
 
-# =========================================================
-# HEALTH CHECK
-# =========================================================
+# ============================================================
+# HOME
+# ============================================================
 
-@api.route(
-    "/api/health",
-    methods=["GET"]
-)
-def health_check():
+@app.route("/")
+def home():
 
-    return jsonify({
-        "success": True,
-        "message": "CA India Admin API is running."
-    }), 200
-
-
-# =========================================================
-# CREATE ENQUIRY
-# =========================================================
-
-@api.route(
-    "/api/enquiries",
-    methods=["POST"]
-)
-def create_enquiry():
-
-    # Import here to avoid circular imports
-    from app import get_db
-    from models.enquiries import add_enquiry
-
-
-    # -----------------------------------------------------
-    # READ JSON
-    # -----------------------------------------------------
-
-    data = request.get_json(
-        silent=True
+    return render_template(
+        "index.html"
     )
 
 
-    if not data:
+# ============================================================
+# ABOUT
+# ============================================================
 
-        return jsonify({
-            "success": False,
-            "message": "Invalid JSON request."
-        }), 400
+@app.route("/about")
+def about():
+
+    return render_template(
+        "about.html"
+    )
 
 
-    # -----------------------------------------------------
-    # GET DATA
-    # -----------------------------------------------------
+# ============================================================
+# SERVICES
+# ============================================================
 
-    name = str(
-        data.get(
-            "name",
-            ""
-        )
+@app.route("/services")
+def services():
+
+    return render_template(
+        "services.html"
+    )
+
+
+# ============================================================
+# INDIVIDUAL SERVICE PAGES
+# ============================================================
+
+@app.route("/services/income-tax")
+def income_tax():
+
+    return render_template(
+        "income_tax.html"
+    )
+
+
+@app.route("/services/gst")
+def gst():
+
+    return render_template(
+        "gst.html"
+    )
+
+
+@app.route("/services/accounting")
+def accounting():
+
+    return render_template(
+        "accounting.html"
+    )
+
+
+@app.route("/services/audit")
+def audit():
+
+    return render_template(
+        "audit.html"
+    )
+
+
+@app.route("/services/financial-advisory")
+def financial_advisory():
+
+    return render_template(
+        "financial_advisory.html"
+    )
+
+
+# ============================================================
+# CONTACT
+# ============================================================
+
+@app.route("/contact")
+def contact():
+
+    return render_template(
+        "contact.html"
+    )
+
+
+# ============================================================
+# ENQUIRY FORM
+# ============================================================
+
+@app.route(
+    "/submit-enquiry",
+    methods=["POST"]
+)
+def submit_enquiry():
+
+    # --------------------------------------------------------
+    # GET FORM DATA
+    # --------------------------------------------------------
+
+    name = request.form.get(
+        "name",
+        ""
     ).strip()
 
 
-    email = str(
-        data.get(
-            "email",
-            ""
-        )
+    email = request.form.get(
+        "email",
+        ""
     ).strip()
 
 
-    phone = str(
-        data.get(
-            "phone",
-            ""
-        )
+    phone = request.form.get(
+        "phone",
+        ""
     ).strip()
 
 
-    service = str(
-        data.get(
-            "service",
-            ""
-        )
+    service = request.form.get(
+        "service",
+        ""
     ).strip()
 
 
-    message = str(
-        data.get(
-            "message",
-            ""
-        )
+    message = request.form.get(
+        "message",
+        ""
     ).strip()
 
 
-    # -----------------------------------------------------
-    # VALIDATION
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # VALIDATE FORM
+    # --------------------------------------------------------
 
-    if not name:
+    if (
+        not name
+        or not email
+        or not service
+        or not message
+    ):
 
-        return jsonify({
-            "success": False,
-            "message": "Name is required."
-        }), 400
+        flash(
+            "Please complete all required fields before submitting.",
+            "error"
+        )
 
-
-    if not email:
-
-        return jsonify({
-            "success": False,
-            "message": "Email is required."
-        }), 400
-
-
-    if not service:
-
-        return jsonify({
-            "success": False,
-            "message": "Service is required."
-        }), 400
+        return redirect(
+            request.referrer
+            or url_for("home")
+        )
 
 
-    if not message:
+    # --------------------------------------------------------
+    # PREPARE DATA FOR ADMIN API
+    # --------------------------------------------------------
 
-        return jsonify({
-            "success": False,
-            "message": "Message is required."
-        }), 400
+    enquiry_data = {
+
+        "name": name,
+
+        "email": email,
+
+        "phone": phone,
+
+        "service": service,
+
+        "message": message
+
+    }
 
 
-    # -----------------------------------------------------
-    # SAVE TO DATABASE
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # SEND ENQUIRY TO ADMIN DASHBOARD
+    # --------------------------------------------------------
 
     try:
 
-        enquiry_id = add_enquiry(
-            get_db,
-            name,
-            email,
-            phone,
-            service,
-            message
+        response = requests.post(
+
+            ADMIN_API_URL,
+
+            json=enquiry_data,
+
+            timeout=15
+
         )
 
 
-    except Exception as error:
+    except requests.exceptions.RequestException as error:
 
         print(
-            "API ERROR:",
+            "ADMIN API CONNECTION ERROR:",
             error
         )
 
-        return jsonify({
-            "success": False,
-            "message":
-                "Failed to save enquiry."
-        }), 500
+        flash(
+            "We could not submit your enquiry right now. "
+            "Please try again later.",
+            "error"
+        )
+
+        return redirect(
+            request.referrer
+            or url_for("contact")
+        )
 
 
-    # -----------------------------------------------------
-    # SUCCESS RESPONSE
-    # -----------------------------------------------------
+    # --------------------------------------------------------
+    # CHECK ADMIN API RESPONSE
+    # --------------------------------------------------------
 
-    return jsonify({
+    if response.status_code == 201:
 
-        "success": True,
+        try:
 
-        "message":
-            "Enquiry received successfully.",
+            result = response.json()
 
-        "enquiry_id":
-            enquiry_id
+        except ValueError:
 
-    }), 201
+            result = {}
+
+
+        if result.get("success"):
+
+            flash(
+                "Thank you. Your enquiry has been received.",
+                "success"
+            )
+
+            return redirect(
+                request.referrer
+                or url_for("contact")
+            )
+
+
+    # --------------------------------------------------------
+    # API ERROR
+    # --------------------------------------------------------
+
+    print(
+        "ADMIN API ERROR:",
+        response.status_code,
+        response.text
+    )
+
+    flash(
+        "We could not submit your enquiry right now. "
+        "Please try again later.",
+        "error"
+    )
+
+    return redirect(
+        request.referrer
+        or url_for("contact")
+    )
+
+
+# ============================================================
+# RUN APPLICATION
+# ============================================================
+
+if __name__ == "__main__":
+
+    app.run(
+        host="0.0.0.0",
+        port=5000,
+        debug=True
+    )
